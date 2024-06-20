@@ -12,7 +12,7 @@ import (
 const dateLayout = "2006-01-02"
 
 type Record struct {
-	UserId   string    `json:"userId"`
+	UserId   int64     `json:"userId"`
 	Time     time.Time `json:"time"`
 	Address  string    `json:"address"`
 	Attempts int       `json:"attempts"`
@@ -107,14 +107,16 @@ func (db *DataBase) AddRecord(record *Record) error {
 	return err
 }
 
-func (db *DataBase) GetUser(userId string) *conf.User {
+func (db *DataBase) GetUser(userId int64) *conf.User {
 	return db.usersConfig.GetUser(userId)
 }
 
 func (db *DataBase) AddUser(user *conf.User) error {
 	db.mutex.Lock()
 
-	db.usersConfig.AddUser(*user)
+	if !db.usersConfig.InConfig(user.UserId) {
+		db.usersConfig.AddUser(*user)
+	}
 	err := db.usersConfig.WriteConfig()
 
 	db.mutex.Unlock()

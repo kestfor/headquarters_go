@@ -2,36 +2,46 @@ package main
 
 import (
 	"fmt"
+	"headquarters/file_data_base"
+	"headquarters/geo"
 	"headquarters/handlers"
 	"headquarters/utils"
 	"log"
+	"time"
 )
+
 import tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
+const CHALLENGE_TRY_TIMEOUT time.Duration = 4000000000
+
 var TOKEN = "6696943443:AAEEidx578sqTT3tC0zGg3xppHPeBdVFTFY"
-
-func ChallengeCallback(message handlers.Message, bot *tgbotapi.BotAPI) error {
-	_ = message.Delete()
-	return message.Answer(handlers.Params{Text: "test", ReplyMarkup: utils.ChallengeReplyKeyboard})
-}
-
-func ChooseHouseCallback(message handlers.Message, bot *tgbotapi.BotAPI) error {
-	return message.EditText(handlers.Params{Text: "выбери штаб", InlineReplyMarkup: &utils.HousesKeyboard})
-}
-
-func GoBackCallback(message handlers.Message, bot *tgbotapi.BotAPI) error {
-	return message.EditText(handlers.Params{Text: "главное меню", InlineReplyMarkup: &utils.MenuKeyboard})
-}
+var DataBase *file_data_base.DataBase
 
 func main() {
+	var err error
+	DataBase, err = file_data_base.NewDataBase("data/users.json", "data/stats.json")
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+
 	bot, err := tgbotapi.NewBotAPI(TOKEN)
 	if err != nil {
 		log.Panic(err)
 	}
-	callbackManager := handlers.NewCallbackManager(bot)
-	callbackManager.RegisterCallback(ChallengeCallback, utils.SEND_LOCATION_INIT)
-	callbackManager.RegisterCallback(ChooseHouseCallback, utils.CHOOSE_HOME)
-	callbackManager.RegisterCallback(GoBackCallback, utils.MENU)
+
+	handler := handlers.NewHandler(bot)
+
+	handler.CallbackManager.RegisterCallback(HousesCallback, geo.HomeOfDima)
+	handler.CallbackManager.RegisterCallback(HousesCallback, geo.HomeOfIlya)
+	handler.CallbackManager.RegisterCallback(HousesCallback, geo.HomeOfAlena)
+
+	handler.CallbackManager.RegisterCallback(DownloadFiles, utils.DOWNLOAD_STAT)
+	handler.CallbackManager.RegisterCallback(ChallengeCallback, utils.SEND_LOCATION_INIT)
+	handler.CallbackManager.RegisterCallback(ChooseHouseCallback, utils.CHOOSE_HOME)
+	handler.CallbackManager.RegisterCallback(GoBackCallback, utils.MENU)
+	handler.CommandManager.RegisterCommand(StartCommand, "start")
+	handler.CommandManager.RegisterCommand(StandardMessage, "")
 
 	bot.Debug = true
 
@@ -41,25 +51,11 @@ func main() {
 	updates := bot.GetUpdatesChan(u)
 
 	for update := range updates {
-
-		if update.CallbackQuery != nil {
-			err = callbackManager.HandleCallback(update)
-
-			// And finally, send a message containing the data received.
-			//msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Data)
-			//msg.ReplyMarkup = utils.MenuKeyboard
-			//if _, err := bot.Send(msg); err != nil {
-			//	panic(err)
-			//}
-		}
-
-		if update.Message != nil {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
-			msg.ReplyMarkup = utils.MenuKeyboard
-			_, err := bot.Send(msg)
+		go func() {
+			err := handler.HandleUpdate(update)
 			if err != nil {
-				fmt.Println(err.Error())
+				fmt.Println(err)
 			}
-		}
+		}()
 	}
 }

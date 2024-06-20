@@ -7,7 +7,7 @@ import (
 )
 
 type User struct {
-	UserId   string `json:"userId"`
+	UserId   int64  `json:"userId"`
 	UserName string `json:"userName"`
 }
 
@@ -68,7 +68,7 @@ func (configManager *ConfigManager) AddUser(user User) {
 	configManager.config.Users = append(configManager.config.Users, user)
 }
 
-func (configManager *ConfigManager) GetUser(userId string) *User {
+func (configManager *ConfigManager) GetUser(userId int64) *User {
 	for _, user := range configManager.config.Users {
 		if user.UserId == userId {
 			return &user
@@ -77,7 +77,7 @@ func (configManager *ConfigManager) GetUser(userId string) *User {
 	return nil
 }
 
-func (configManager *ConfigManager) InConfig(userId string) bool {
+func (configManager *ConfigManager) InConfig(userId int64) bool {
 	for _, user := range configManager.config.Users {
 		if user.UserId == userId {
 			return true

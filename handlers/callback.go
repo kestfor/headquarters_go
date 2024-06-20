@@ -5,28 +5,41 @@ import (
 )
 
 type CallbackHandler interface {
-	RegisterCallback(function func(message Message, bot *tgbotapi.BotAPI) error, callbackData string) error
+	RegisterCallback(function func(params Params) error, callbackData string) error
 	HandleCallback(callbackData string) error
+}
+
+type CallbackFactory struct {
+	prefix string
+	data   map[any]any
+}
+
+func NewCallbackFactory(prefix string) *CallbackFactory {
+	return &CallbackFactory{prefix: prefix, data: map[any]any{}}
 }
 
 type CallbackManager struct {
 	bot       *tgbotapi.BotAPI
-	callbacks map[string]func(message Message, bot *tgbotapi.BotAPI) error
+	callbacks map[string]func(params Params) error
 }
 
 func NewCallbackManager(bot *tgbotapi.BotAPI) *CallbackManager {
-	return &CallbackManager{callbacks: make(map[string]func(message Message, bot *tgbotapi.BotAPI) error), bot: bot}
+	return &CallbackManager{callbacks: make(map[string]func(params Params) error), bot: bot}
 }
 
-func (manager *CallbackManager) RegisterCallback(function func(message Message, bot *tgbotapi.BotAPI) error, callbackData string) {
+func (manager *CallbackManager) RegisterCallbackFactory(function func(params Params) error, factory *CallbackFactory) {
+	manager.callbacks[factory.prefix] = function
+}
+
+func (manager *CallbackManager) RegisterCallback(function func(params Params) error, callbackData string) {
 	manager.callbacks[callbackData] = function
 }
 
-func (manager *CallbackManager) HandleCallback(update tgbotapi.Update) error {
+func (manager *CallbackManager) HandleCallback(update tgbotapi.Update, state *State) error {
 	callbackData := update.CallbackData()
 	for key, function := range manager.callbacks {
 		if key == callbackData {
-			err := function(Message{update.CallbackQuery.Message, manager.bot}, manager.bot)
+			err := function(Params{update.CallbackQuery, &Message{update.CallbackQuery.Message, manager.bot}, manager.bot, state})
 			if err != nil {
 				return err
 			}
