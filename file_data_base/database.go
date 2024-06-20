@@ -2,7 +2,7 @@ package file_data_base
 
 import (
 	"encoding/json"
-	conf "headquarters/config_manager"
+	conf "headquarters/user_manager"
 	"io"
 	"os"
 	"sync"

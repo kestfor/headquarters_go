@@ -1,4 +1,4 @@
-package config_manager
+package user_manager
 
 import (
 	"encoding/json"

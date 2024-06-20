@@ -1,7 +1,7 @@
 package tests
 
 import (
-	conf "headquarters/config_manager"
+	conf "headquarters/user_manager"
 	"testing"
 )
 
