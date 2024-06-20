@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const CHALLENGE_TRY_TIMEOUT time.Duration = 4000000000
+
 func StartCommand(params handlers.Params) error {
 	message := params.Message
 

@@ -1,18 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"headquarters/file_data_base"
 	"headquarters/geo"
 	"headquarters/handlers"
 	"headquarters/utils"
 	"log"
-	"time"
 )
 
 import tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-
-const CHALLENGE_TRY_TIMEOUT time.Duration = 4000000000
 
 var TOKEN = "6696943443:AAEEidx578sqTT3tC0zGg3xppHPeBdVFTFY"
 var DataBase *file_data_base.DataBase
@@ -20,14 +16,16 @@ var DataBase *file_data_base.DataBase
 func main() {
 	var err error
 	DataBase, err = file_data_base.NewDataBase("data/users.json", "data/stats.json")
+
 	if err != nil {
-		log.Println(err.Error())
+		log.Panic(err.Error())
 		return
 	}
 
 	bot, err := tgbotapi.NewBotAPI(TOKEN)
 	if err != nil {
 		log.Panic(err)
+		return
 	}
 
 	handler := handlers.NewHandler(bot)
@@ -41,6 +39,7 @@ func main() {
 	handler.CallbackManager.RegisterCallback(ChooseHouseCallback, utils.CHOOSE_HOME)
 	handler.CallbackManager.RegisterCallback(GoBackCallback, utils.MENU)
 	handler.CommandManager.RegisterCommand(StartCommand, "start")
+	handler.CommandManager.RegisterCommand(StartCommand, "menu")
 	handler.CommandManager.RegisterCommand(StandardMessage, "")
 
 	bot.Debug = true
@@ -54,7 +53,7 @@ func main() {
 		go func() {
 			err := handler.HandleUpdate(update)
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err.Error())
 			}
 		}()
 	}

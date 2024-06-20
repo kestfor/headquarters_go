@@ -31,16 +31,17 @@ var GoBackKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 	tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("назад", MENU)),
 )
 
-func getHousesButtons() []tgbotapi.InlineKeyboardButton {
-	var buttons []tgbotapi.InlineKeyboardButton
-	for key, _ := range geo.Houses {
-		callbackData := key
-		buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(key, callbackData))
-	}
-	return buttons
-}
+//func getHousesButtons() []tgbotapi.InlineKeyboardButton {
+//	var buttons []tgbotapi.InlineKeyboardButton
+//	for key := range geo.Houses {
+//		buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(key, key))
+//	}
+//	return buttons
+//}
 
 var HousesKeyboard = tgbotapi.NewInlineKeyboardMarkup(
-	getHousesButtons(),
+	tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData(geo.HomeOfAlena, geo.HomeOfAlena)),
+	tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData(geo.HomeOfIlya, geo.HomeOfIlya)),
+	tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData(geo.HomeOfDima, geo.HomeOfDima)),
 	tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("назад", MENU)),
 )
