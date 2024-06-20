@@ -29,6 +29,8 @@ func StandardMessage(params handlers.Params) error {
 	switch state.GetState() {
 	case "":
 		return nil
+	case "location":
+		return locationHandler(message, state)
 	case "challenge":
 		return challengeHandler(message, state)
 	default:
@@ -71,4 +73,28 @@ func challengeHandler(message *handlers.Message, state *handlers.State) error {
 		return message.Answer(handlers.FunctionParams{Text: "анлак, пробуй еще", ReplyMarkup: &utils.GoBackKeyboard})
 
 	}
+}
+
+func locationHandler(message *handlers.Message, state *handlers.State) error {
+	if message.ApiMessage.Location == nil {
+		return nil
+	}
+
+	latitude := message.ApiMessage.Location.Latitude
+	longitude := message.ApiMessage.Location.Longitude
+
+	if geo.MainHome.Equivalent(geo.AddressFromLocation(latitude, longitude)) {
+		state.SetState("challenge")
+		_ = message.Delete()
+
+		return message.Answer(handlers.FunctionParams{Text: utils.ChallengeInscription, ReplyMarkup: &utils.ChallengeReplyKeyboard, ParseMode: "HTML"})
+
+	} else {
+		state.SetState("")
+
+		_ = message.Delete()
+
+		return message.Answer(handlers.FunctionParams{Text: "ты находишься не в том месте", ReplyMarkup: &utils.GoBackKeyboard})
+	}
+
 }

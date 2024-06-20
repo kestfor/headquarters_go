@@ -10,10 +10,10 @@ import (
 func ChallengeCallback(params handlers.Params) error {
 	message := params.Message
 	state := params.State
-	state.SetState("challenge")
+	state.SetState("location")
 	state.SetData(map[string]any{"attempts": 0})
 	_ = message.Delete()
-	return message.Answer(handlers.FunctionParams{Text: utils.ChallengeInscription, ReplyMarkup: utils.ChallengeReplyKeyboard, ParseMode: "HTML"})
+	return message.Answer(handlers.FunctionParams{Text: "отправить локацию", ReplyMarkup: &utils.GeolocationReplyKeyboard})
 }
 
 func ChooseHouseCallback(params handlers.Params) error {
