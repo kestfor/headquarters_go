@@ -4,7 +4,7 @@ import (
 	"headquarters/dice"
 	"headquarters/file_data_base"
 	"headquarters/geo"
-	"headquarters/handlers"
+	updHnd "headquarters/update_handlers"
 	conf "headquarters/user_manager"
 	"headquarters/utils"
 	"log"
@@ -13,18 +13,19 @@ import (
 
 const CHALLENGE_TRY_TIMEOUT time.Duration = 4000000000
 
-func StartCommand(params handlers.Params) error {
+func StartCommand(params updHnd.RedirectedParams) error {
 	message := params.Message
+	params.State.Clear()
 
 	err := DataBase.AddUser(&conf.User{UserId: message.ApiMessage.Chat.ID, UserName: message.ApiMessage.From.UserName})
 	if err != nil {
 		log.Println(err.Error())
 	}
 
-	return message.Answer(handlers.FunctionParams{Text: "главное меню", ReplyMarkup: &utils.MenuKeyboard})
+	return message.Answer(updHnd.MessageParams{Text: "главное меню", ReplyMarkup: &utils.MenuKeyboard})
 }
 
-func StandardMessage(params handlers.Params) error {
+func StandardMessage(params updHnd.RedirectedParams) error {
 	state := params.State
 	message := params.Message
 
@@ -35,12 +36,14 @@ func StandardMessage(params handlers.Params) error {
 		return locationHandler(message, state)
 	case "challenge":
 		return challengeHandler(message, state)
+	case "phrase":
+		return addPhraseHandler(message, state)
 	default:
 		return nil
 	}
 }
 
-func challengeHandler(message *handlers.Message, state *handlers.State) error {
+func challengeHandler(message *updHnd.Message, state *updHnd.State) error {
 
 	if message.ApiMessage.Dice == nil {
 		return nil
@@ -68,16 +71,16 @@ func challengeHandler(message *handlers.Message, state *handlers.State) error {
 			log.Println(err.Error())
 		}
 
-		return message.Answer(handlers.FunctionParams{Text: "запись добавлена", ReplyMarkup: &utils.GoBackKeyboard})
+		return message.Answer(updHnd.MessageParams{Text: "запись добавлена" + utils.GetRandomHappyEmoji(), ReplyMarkup: &utils.GoBackKeyboard})
 
 	} else {
 
-		return message.Answer(handlers.FunctionParams{Text: "анлак, пробуй еще", ReplyMarkup: &utils.GoBackKeyboard})
+		return message.Answer(updHnd.MessageParams{Text: utils.GetRandomChallengePhrase(DataBase.Phrases), ReplyMarkup: &utils.GoBackKeyboard, ParseMode: "HTML"})
 
 	}
 }
 
-func locationHandler(message *handlers.Message, state *handlers.State) error {
+func locationHandler(message *updHnd.Message, state *updHnd.State) error {
 	if message.ApiMessage.Location == nil {
 		return nil
 	}
@@ -89,14 +92,37 @@ func locationHandler(message *handlers.Message, state *handlers.State) error {
 		state.SetState("challenge")
 		_ = message.Delete()
 
-		return message.Answer(handlers.FunctionParams{Text: utils.ChallengeInscription, ReplyMarkup: &utils.ChallengeReplyKeyboard, ParseMode: "HTML"})
+		return message.Answer(updHnd.MessageParams{Text: utils.ChallengeInscription, ReplyMarkup: &utils.ChallengeReplyKeyboard, ParseMode: "HTML"})
 
 	} else {
 		state.SetState("")
 
 		_ = message.Delete()
 
-		return message.Answer(handlers.FunctionParams{Text: "ты находишься не в том месте", ReplyMarkup: &utils.GoBackKeyboard})
+		return message.Answer(updHnd.MessageParams{Text: "ты находишься не в том месте" + utils.GetRandomChallengeEmoji(), ReplyMarkup: &utils.GoBackKeyboard})
+	}
+
+}
+
+func addPhraseHandler(message *updHnd.Message, state *updHnd.State) error {
+	if message.ApiMessage == nil {
+		return nil
+	}
+
+	newPhrase := message.ApiMessage.Text
+
+	if newPhrase == "" {
+		return nil
+	}
+
+	err := DataBase.AddPhrase(newPhrase)
+
+	state.SetState("")
+
+	if err != nil {
+		return message.Answer(updHnd.MessageParams{Text: "что-то пошло не так", ReplyMarkup: &utils.GoBackKeyboard})
+	} else {
+		return message.Answer(updHnd.MessageParams{Text: "фраза добавлена" + utils.GetRandomHappyEmoji(), ReplyMarkup: &utils.GoBackKeyboard})
 	}
 
 }

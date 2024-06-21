@@ -1,4 +1,4 @@
-package handlers
+package update_handlers
 
 import tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 

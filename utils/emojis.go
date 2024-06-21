@@ -1,18 +1,15 @@
 package utils
 
-import (
-	"math/rand/v2"
-	"strconv"
-)
+import "math/rand"
 
 func GetRandomChallengeEmoji() string {
-	emojis := "😐🤭🙄😅🥲😙🤨🤪🥸"
+	emojis := []rune(`😐🤭🙄😅🥲😙🤨🤪🥸`)
 	maxN := len(emojis)
-	return strconv.Itoa(int(emojis[rand.IntN(maxN)]))
+	return string(emojis[rand.Intn(maxN)])
 }
 
 func GetRandomHappyEmoji() string {
-	emojis := "🥹😌😉😜😎🤩🥳😏🤗🫡"
+	emojis := []rune(`🥹😌😉😜😎🤩🥳😏🤗🫡`)
 	maxN := len(emojis)
-	return strconv.Itoa(int(emojis[rand.IntN(maxN)]))
+	return string(emojis[rand.Intn(maxN)])
 }

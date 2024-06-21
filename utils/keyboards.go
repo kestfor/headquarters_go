@@ -23,7 +23,7 @@ var GeolocationReplyKeyboard = tgbotapi.NewReplyKeyboard(
 var MenuKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 	tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("зачекиниться", SEND_LOCATION_INIT)),
 	tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("выбрать штаб", CHOOSE_HOME)),
-	//tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("добавить фразу", ADD_PHRASE_INIT)),
+	tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("добавить фразу", ADD_PHRASE_INIT)),
 	tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("выгрузить статистику", DOWNLOAD_STAT)),
 )
 

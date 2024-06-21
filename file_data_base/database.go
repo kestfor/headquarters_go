@@ -1,6 +1,7 @@
 package file_data_base
 
 import (
+	"bufio"
 	"encoding/json"
 	conf "headquarters/user_manager"
 	"io"
@@ -19,29 +20,33 @@ type Record struct {
 }
 
 type DataBaseInterface interface {
-	AddUser(user *conf.User)
-	GetUser(userId string) *conf.User
-	AddRecord(record *Record)
+	AddUser(user *conf.User) error
+	GetUser(userId int64) *conf.User
+	AddRecord(record *Record) error
+	AddPhrase(phrase string) error
 }
 
 type DataBase struct {
-	StatsFileName string
-	UserFileName  string
-	mutex         sync.RWMutex
-	records       map[string][]*Record
-	statsFile     *os.File
-	usersConfig   *conf.ConfigManager
+	StatsFileName   string
+	UserFileName    string
+	PhrasesFileName string
+	mutex           sync.RWMutex
+	records         map[string][]*Record
+	statsFile       *os.File
+	usersConfig     *conf.ConfigManager
+	Phrases         []string
 }
 
-func NewDataBase(userFileName string, statsFileName string) (*DataBase, error) {
+func NewDataBase(userFileName string, statsFileName string, phrasesFileName string) (*DataBase, error) {
 	var db = new(DataBase)
 	db.StatsFileName = statsFileName
 	db.UserFileName = userFileName
+	db.PhrasesFileName = phrasesFileName
 	db.mutex = sync.RWMutex{}
 	db.records = make(map[string][]*Record)
 	db.usersConfig = conf.NewConfigManager(db.UserFileName)
-	err := db.usersConfig.ReadConfig()
 
+	err := db.usersConfig.ReadConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -49,9 +54,14 @@ func NewDataBase(userFileName string, statsFileName string) (*DataBase, error) {
 	err = db.readStats()
 	if err != nil {
 		return nil, err
-	} else {
-		return db, nil
 	}
+
+	err = db.readPhrases()
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
 
 func (db *DataBase) readStats() error {
@@ -121,5 +131,52 @@ func (db *DataBase) AddUser(user *conf.User) error {
 
 	db.mutex.Unlock()
 
+	return err
+}
+
+func (db *DataBase) readPhrases() error {
+	file, err := os.OpenFile(db.PhrasesFileName, os.O_RDONLY|os.O_CREATE, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	reader := bufio.NewReader(file)
+	for {
+		line, _ := reader.ReadString('\n')
+		if line == "" {
+			break
+		}
+		line = line[:len(line)-1]
+		db.Phrases = append(db.Phrases, line)
+	}
+	return file.Close()
+}
+
+func (db *DataBase) writePhrases() error {
+	file, err := os.OpenFile(db.PhrasesFileName, os.O_WRONLY|os.O_TRUNC, os.ModePerm)
+
+	if err != nil {
+		return nil
+	}
+	writer := bufio.NewWriter(file)
+	for _, phrase := range db.Phrases {
+		_, err := writer.WriteString(phrase + "\n")
+		if err != nil {
+			return err
+		}
+	}
+	err = writer.Flush()
+	if err != nil {
+		return err
+	}
+	return file.Close()
+}
+
+func (db *DataBase) AddPhrase(phrase string) error {
+	db.mutex.Lock()
+
+	db.Phrases = append(db.Phrases, phrase)
+	err := db.writePhrases()
+
+	db.mutex.Unlock()
 	return err
 }

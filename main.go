@@ -1,21 +1,20 @@
 package main
 
 import (
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"headquarters/file_data_base"
 	"headquarters/geo"
-	"headquarters/handlers"
+	"headquarters/update_handlers"
 	"headquarters/utils"
 	"log"
 )
-
-import tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
 var TOKEN = "6696943443:AAEEidx578sqTT3tC0zGg3xppHPeBdVFTFY"
 var DataBase *file_data_base.DataBase
 
 func main() {
 	var err error
-	DataBase, err = file_data_base.NewDataBase("data/users.json", "data/stats.json")
+	DataBase, err = file_data_base.NewDataBase("data/users.json", "data/stats.json", "data/phrases.txt")
 
 	if err != nil {
 		log.Panic(err.Error())
@@ -28,12 +27,13 @@ func main() {
 		return
 	}
 
-	handler := handlers.NewHandler(bot)
+	handler := update_handlers.NewHandler(bot)
 
 	handler.CallbackManager.RegisterCallback(HousesCallback, geo.HomeOfDima)
 	handler.CallbackManager.RegisterCallback(HousesCallback, geo.HomeOfIlya)
 	handler.CallbackManager.RegisterCallback(HousesCallback, geo.HomeOfAlena)
 
+	handler.CallbackManager.RegisterCallback(AddPhraseCallback, utils.ADD_PHRASE_INIT)
 	handler.CallbackManager.RegisterCallback(DownloadFiles, utils.DOWNLOAD_STAT)
 	handler.CallbackManager.RegisterCallback(ChallengeCallback, utils.SEND_LOCATION_INIT)
 	handler.CallbackManager.RegisterCallback(ChooseHouseCallback, utils.CHOOSE_HOME)

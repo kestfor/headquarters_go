@@ -1,11 +1,11 @@
-package handlers
+package update_handlers
 
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 type CallbackHandler interface {
-	RegisterCallback(function func(params Params) error, callbackData string) error
+	RegisterCallback(function func(params RedirectedParams) error, callbackData string) error
 	HandleCallback(callbackData string) error
 }
 
@@ -20,18 +20,18 @@ func NewCallbackFactory(prefix string) *CallbackFactory {
 
 type CallbackManager struct {
 	bot       *tgbotapi.BotAPI
-	callbacks map[string]func(params Params) error
+	callbacks map[string]func(params RedirectedParams) error
 }
 
 func NewCallbackManager(bot *tgbotapi.BotAPI) *CallbackManager {
-	return &CallbackManager{callbacks: make(map[string]func(params Params) error), bot: bot}
+	return &CallbackManager{callbacks: make(map[string]func(params RedirectedParams) error), bot: bot}
 }
 
-func (manager *CallbackManager) RegisterCallbackFactory(function func(params Params) error, factory *CallbackFactory) {
+func (manager *CallbackManager) RegisterCallbackFactory(function func(params RedirectedParams) error, factory *CallbackFactory) {
 	manager.callbacks[factory.prefix] = function
 }
 
-func (manager *CallbackManager) RegisterCallback(function func(params Params) error, callbackData string) {
+func (manager *CallbackManager) RegisterCallback(function func(params RedirectedParams) error, callbackData string) {
 	manager.callbacks[callbackData] = function
 }
 
@@ -39,7 +39,7 @@ func (manager *CallbackManager) HandleCallback(update tgbotapi.Update, state *St
 	callbackData := update.CallbackData()
 	for key, function := range manager.callbacks {
 		if key == callbackData {
-			err := function(Params{update.CallbackQuery, &Message{update.CallbackQuery.Message, manager.bot}, manager.bot, state})
+			err := function(RedirectedParams{update.CallbackQuery, &Message{update.CallbackQuery.Message, manager.bot}, manager.bot, state})
 			if err != nil {
 				return err
 			}
