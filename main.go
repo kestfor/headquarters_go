@@ -11,10 +11,12 @@ import (
 
 var TOKEN = "6696943443:AAEEidx578sqTT3tC0zGg3xppHPeBdVFTFY"
 var DataBase *file_data_base.DataBase
+var MessageDeleter *Deleter
 
 func main() {
 	var err error
 	DataBase, err = file_data_base.NewDataBase("data/users.json", "data/stats.json", "data/phrases.txt")
+	MessageDeleter = NewDeleter()
 
 	if err != nil {
 		log.Panic(err.Error())
@@ -41,8 +43,6 @@ func main() {
 	handler.CommandManager.RegisterCommand(StartCommand, "start")
 	handler.CommandManager.RegisterCommand(StartCommand, "menu")
 	handler.CommandManager.RegisterCommand(StandardMessage, "")
-
-	bot.Debug = true
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60

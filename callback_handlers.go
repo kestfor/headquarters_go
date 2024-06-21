@@ -12,20 +12,24 @@ func ChallengeCallback(params update_handlers.RedirectedParams) error {
 	state := params.State
 	state.SetState("location")
 	state.SetData(map[string]any{"attempts": 0})
-	_ = message.Delete()
-	return message.Answer(update_handlers.MessageParams{Text: "отправить локацию", ReplyMarkup: &utils.GeolocationReplyKeyboard})
+	_, _ = message.Delete()
+	msg, err := message.Answer(update_handlers.MessageParams{Text: "отправить локацию", ReplyMarkup: &utils.GeolocationReplyKeyboard})
+	MessageDeleter.AddMessage(update_handlers.NewMessage(&msg, params.Bot))
+	return err
 }
 
 func ChooseHouseCallback(params update_handlers.RedirectedParams) error {
 	message := params.Message
 	params.State.Clear()
-	return message.EditText(update_handlers.MessageParams{Text: "выбери штаб", InlineReplyMarkup: &utils.HousesKeyboard})
+	_, err := message.EditText(update_handlers.MessageParams{Text: "выбери штаб", InlineReplyMarkup: &utils.HousesKeyboard})
+	return err
 }
 
 func GoBackCallback(params update_handlers.RedirectedParams) error {
 	message := params.Message
 	params.State.Clear()
-	return message.EditText(update_handlers.MessageParams{Text: "главное меню", InlineReplyMarkup: &utils.MenuKeyboard})
+	_, err := message.EditText(update_handlers.MessageParams{Text: "главное меню", InlineReplyMarkup: &utils.MenuKeyboard})
+	return err
 }
 
 func HousesCallback(params update_handlers.RedirectedParams) error {
@@ -46,7 +50,8 @@ func HousesCallback(params update_handlers.RedirectedParams) error {
 	default:
 	}
 
-	return params.Message.EditText(update_handlers.MessageParams{Text: "штаб изменен", InlineReplyMarkup: &utils.GoBackKeyboard})
+	_, err := params.Message.EditText(update_handlers.MessageParams{Text: "штаб изменен", InlineReplyMarkup: &utils.GoBackKeyboard})
+	return err
 }
 
 func DownloadFiles(params update_handlers.RedirectedParams) error {
@@ -61,9 +66,14 @@ func DownloadFiles(params update_handlers.RedirectedParams) error {
 	stats := tgbotapi.NewDocument(message.ApiMessage.Chat.ID, statsFile)
 	users := tgbotapi.NewDocument(message.ApiMessage.Chat.ID, usersFile)
 
-	_, err1 := bot.Send(stats)
-	_, err2 := bot.Send(users)
-	_, err3 := bot.Send(phrases)
+	msg1, err1 := bot.Send(stats)
+	msg2, err2 := bot.Send(users)
+	msg3, err3 := bot.Send(phrases)
+
+	MessageDeleter.AddMessage(update_handlers.NewMessage(&msg1, bot))
+	MessageDeleter.AddMessage(update_handlers.NewMessage(&msg2, bot))
+	MessageDeleter.AddMessage(update_handlers.NewMessage(&msg3, bot))
+
 	if err1 != nil {
 		return err1
 	}
@@ -84,5 +94,7 @@ func AddPhraseCallback(params update_handlers.RedirectedParams) error {
 	state := params.State
 
 	state.SetState("phrase")
-	return message.EditText(update_handlers.MessageParams{Text: "отправь фразу", InlineReplyMarkup: &utils.GoBackKeyboard})
+	msg, err := message.EditText(update_handlers.MessageParams{Text: "отправь фразу", InlineReplyMarkup: &utils.GoBackKeyboard})
+	MessageDeleter.AddMessage(update_handlers.NewMessage(&msg, params.Bot))
+	return err
 }

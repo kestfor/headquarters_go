@@ -1,6 +1,7 @@
 package main
 
 import (
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"headquarters/dice"
 	"headquarters/file_data_base"
 	"headquarters/geo"
@@ -17,23 +18,29 @@ func StartCommand(params updHnd.RedirectedParams) error {
 	message := params.Message
 	params.State.Clear()
 
+	MessageDeleter.DeleteMessages(message.ApiMessage.Chat.ID)
+	MessageDeleter.AddMessage(message)
+
 	err := DataBase.AddUser(&conf.User{UserId: message.ApiMessage.Chat.ID, UserName: message.ApiMessage.From.UserName})
 	if err != nil {
 		log.Println(err.Error())
 	}
 
-	return message.Answer(updHnd.MessageParams{Text: "главное меню", ReplyMarkup: &utils.MenuKeyboard})
+	msg, err := message.Answer(updHnd.MessageParams{Text: "главное меню", ReplyMarkup: &utils.MenuKeyboard})
+	MessageDeleter.AddMessage(updHnd.NewMessage(&msg, params.Bot))
+	return err
 }
 
 func StandardMessage(params updHnd.RedirectedParams) error {
 	state := params.State
 	message := params.Message
 
+	MessageDeleter.AddMessage(message)
 	switch state.GetState() {
 	case "":
 		return nil
 	case "location":
-		return locationHandler(message, state)
+		return locationHandler(message, state, params.Bot)
 	case "challenge":
 		return challengeHandler(message, state)
 	case "phrase":
@@ -71,16 +78,18 @@ func challengeHandler(message *updHnd.Message, state *updHnd.State) error {
 			log.Println(err.Error())
 		}
 
-		return message.Answer(updHnd.MessageParams{Text: "запись добавлена" + utils.GetRandomHappyEmoji(), ReplyMarkup: &utils.GoBackKeyboard})
+		MessageDeleter.DeleteMessages(message.ApiMessage.Chat.ID)
+		_, err = message.Answer(updHnd.MessageParams{Text: "запись добавлена" + utils.GetRandomHappyEmoji(), ReplyMarkup: &utils.GoBackKeyboard})
+		return err
 
 	} else {
 
-		return message.Answer(updHnd.MessageParams{Text: utils.GetRandomChallengePhrase(DataBase.Phrases), ReplyMarkup: &utils.GoBackKeyboard, ParseMode: "HTML"})
-
+		_, err := message.Answer(updHnd.MessageParams{Text: utils.GetRandomChallengePhrase(DataBase.Phrases), ReplyMarkup: &utils.GoBackKeyboard, ParseMode: "HTML"})
+		return err
 	}
 }
 
-func locationHandler(message *updHnd.Message, state *updHnd.State) error {
+func locationHandler(message *updHnd.Message, state *updHnd.State, bot *tgbotapi.BotAPI) error {
 	if message.ApiMessage.Location == nil {
 		return nil
 	}
@@ -88,18 +97,22 @@ func locationHandler(message *updHnd.Message, state *updHnd.State) error {
 	latitude := message.ApiMessage.Location.Latitude
 	longitude := message.ApiMessage.Location.Longitude
 
+	MessageDeleter.AddMessage(message)
+
 	if geo.MainHome.Equivalent(geo.AddressFromLocation(latitude, longitude)) {
 		state.SetState("challenge")
-		_ = message.Delete()
 
-		return message.Answer(updHnd.MessageParams{Text: utils.ChallengeInscription, ReplyMarkup: &utils.ChallengeReplyKeyboard, ParseMode: "HTML"})
-
+		MessageDeleter.DeleteMessages(message.ApiMessage.Chat.ID)
+		msg, err := message.Answer(updHnd.MessageParams{Text: utils.ChallengeInscription, ReplyMarkup: &utils.ChallengeReplyKeyboard, ParseMode: "HTML"})
+		MessageDeleter.AddMessage(updHnd.NewMessage(&msg, bot))
+		return err
 	} else {
 		state.SetState("")
 
-		_ = message.Delete()
-
-		return message.Answer(updHnd.MessageParams{Text: "ты находишься не в том месте" + utils.GetRandomChallengeEmoji(), ReplyMarkup: &utils.GoBackKeyboard})
+		MessageDeleter.DeleteMessages(message.ApiMessage.Chat.ID)
+		msg, err := message.Answer(updHnd.MessageParams{Text: "ты находишься не в том месте" + utils.GetRandomChallengeEmoji(), ReplyMarkup: &utils.GoBackKeyboard})
+		MessageDeleter.AddMessage(updHnd.NewMessage(&msg, bot))
+		return err
 	}
 
 }
@@ -109,6 +122,7 @@ func addPhraseHandler(message *updHnd.Message, state *updHnd.State) error {
 		return nil
 	}
 
+	MessageDeleter.AddMessage(message)
 	newPhrase := message.ApiMessage.Text
 
 	if newPhrase == "" {
@@ -120,9 +134,16 @@ func addPhraseHandler(message *updHnd.Message, state *updHnd.State) error {
 	state.SetState("")
 
 	if err != nil {
-		return message.Answer(updHnd.MessageParams{Text: "что-то пошло не так", ReplyMarkup: &utils.GoBackKeyboard})
+
+		MessageDeleter.DeleteMessages(message.ApiMessage.Chat.ID)
+		_, err := message.Answer(updHnd.MessageParams{Text: "что-то пошло не так", ReplyMarkup: &utils.GoBackKeyboard})
+
+		return err
 	} else {
-		return message.Answer(updHnd.MessageParams{Text: "фраза добавлена" + utils.GetRandomHappyEmoji(), ReplyMarkup: &utils.GoBackKeyboard})
+
+		MessageDeleter.DeleteMessages(message.ApiMessage.Chat.ID)
+		_, err := message.Answer(updHnd.MessageParams{Text: "фраза добавлена" + utils.GetRandomHappyEmoji(), ReplyMarkup: &utils.GoBackKeyboard})
+		return err
 	}
 
 }

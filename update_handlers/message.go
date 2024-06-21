@@ -16,31 +16,32 @@ type MessageParams struct {
 	ParseMode         string
 }
 
-type MessageInterface interface {
-	Delete() error
-	Answer(params MessageParams) error
-	EditText(params MessageParams) error
+func NewMessage(msg *tgbotapi.Message, bot *tgbotapi.BotAPI) *Message {
+	return &Message{msg, bot}
 }
 
-func (message *Message) Answer(params MessageParams) error {
+type MessageInterface interface {
+	Delete() (tgbotapi.Message, error)
+	Answer(params MessageParams) (tgbotapi.Message, error)
+	EditText(params MessageParams) (tgbotapi.Message, error)
+}
+
+func (message *Message) Answer(params MessageParams) (tgbotapi.Message, error) {
 	msg := tgbotapi.NewMessage(message.ApiMessage.Chat.ID, params.Text)
 	msg.ReplyMarkup = params.ReplyMarkup
 	if params.ParseMode != "" {
 		msg.ParseMode = params.ParseMode
 	}
-	_, err := message.bot.Send(msg)
-	return err
+	return message.bot.Send(msg)
 }
 
-func (message *Message) EditText(params MessageParams) error {
+func (message *Message) EditText(params MessageParams) (tgbotapi.Message, error) {
 	msg := tgbotapi.NewEditMessageText(message.ApiMessage.Chat.ID, message.ApiMessage.MessageID, params.Text)
 	msg.ReplyMarkup = params.InlineReplyMarkup
-	_, err := message.bot.Send(msg)
-	return err
+	return message.bot.Send(msg)
 }
 
-func (message *Message) Delete() error {
+func (message *Message) Delete() (tgbotapi.Message, error) {
 	msg := tgbotapi.NewDeleteMessage(message.ApiMessage.Chat.ID, message.ApiMessage.MessageID)
-	_, err := message.bot.Send(msg)
-	return err
+	return message.bot.Send(msg)
 }
