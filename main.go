@@ -7,14 +7,16 @@ import (
 	"headquarters/update_handlers"
 	"headquarters/utils"
 	"log"
+	"os"
 )
 
-var TOKEN = "6696943443:AAEEidx578sqTT3tC0zGg3xppHPeBdVFTFY"
+var TOKEN = "6729922230:AAG1KZte-mstTL2tRD1uz3lezchKhJaJOTk"
 var DataBase *file_data_base.DataBase
 var MessageDeleter *Deleter
 
 func main() {
 	var err error
+	_ = os.Mkdir("data", os.ModePerm)
 	DataBase, err = file_data_base.NewDataBase("data/users.json", "data/stats.json", "data/phrases.txt")
 	MessageDeleter = NewDeleter()
 
@@ -46,7 +48,6 @@ func main() {
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
-
 	updates := bot.GetUpdatesChan(u)
 
 	for update := range updates {
