@@ -1,7 +1,7 @@
 package tests
 
 import (
-	conf "headquarters/user_manager"
+	conf "headquarters/code/user_manager"
 	"testing"
 )
 
@@ -13,7 +13,7 @@ func TestConfig(t *testing.T) {
 		t.Fatalf("can't create config: %s", err.Error())
 		return
 	}
-	newUser := conf.User{UserId: "123", UserName: "1235"}
+	newUser := conf.User{UserId: 123, UserName: "1235"}
 	config.AddUser(newUser)
 	if !config.InConfig(newUser.UserId) {
 		t.Fatalf("new user wasn't added")

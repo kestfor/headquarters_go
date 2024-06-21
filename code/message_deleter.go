@@ -1,7 +1,7 @@
 package main
 
 import (
-	"headquarters/update_handlers"
+	"headquarters/code/update_handlers"
 )
 
 type DeleterInterface interface {

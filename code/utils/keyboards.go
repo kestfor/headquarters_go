@@ -2,8 +2,8 @@ package utils
 
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"headquarters/dice"
-	"headquarters/geo"
+	"headquarters/code/dice"
+	"headquarters/code/geo"
 )
 
 var ChallengeReplyKeyboard = tgbotapi.NewReplyKeyboard(

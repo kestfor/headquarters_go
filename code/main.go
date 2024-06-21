@@ -2,10 +2,10 @@ package main
 
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"headquarters/file_data_base"
-	"headquarters/geo"
-	"headquarters/update_handlers"
-	"headquarters/utils"
+	"headquarters/code/file_data_base"
+	"headquarters/code/geo"
+	"headquarters/code/update_handlers"
+	"headquarters/code/utils"
 	"log"
 	"os"
 )

@@ -2,7 +2,7 @@ package tests
 
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"headquarters/dice"
+	"headquarters/code/dice"
 	"testing"
 )
 
