@@ -16,5 +16,6 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo/
 
 ADD data ./data
 COPY bin/main /
+CMD ["chmod", "777", "main"]
 
 CMD ["/main"]
