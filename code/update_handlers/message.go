@@ -21,27 +21,36 @@ func NewMessage(msg *tgbotapi.Message, bot *tgbotapi.BotAPI) *Message {
 }
 
 type MessageInterface interface {
-	Delete() (tgbotapi.Message, error)
-	Answer(params MessageParams) (tgbotapi.Message, error)
-	EditText(params MessageParams) (tgbotapi.Message, error)
+	Delete() (*Message, error)
+	Answer(params MessageParams) (*Message, error)
+	EditText(params MessageParams) (*Message, error)
 }
 
-func (message *Message) Answer(params MessageParams) (tgbotapi.Message, error) {
+func getMessage(message tgbotapi.Chattable, bot *tgbotapi.BotAPI) (*Message, error) {
+	res, err := bot.Send(message)
+	if err != nil {
+		return nil, err
+	} else {
+		return NewMessage(&res, bot), err
+	}
+}
+
+func (message *Message) Answer(params MessageParams) (*Message, error) {
 	msg := tgbotapi.NewMessage(message.ApiMessage.Chat.ID, params.Text)
 	msg.ReplyMarkup = params.ReplyMarkup
 	if params.ParseMode != "" {
 		msg.ParseMode = params.ParseMode
 	}
-	return message.bot.Send(msg)
+	return getMessage(msg, message.bot)
 }
 
-func (message *Message) EditText(params MessageParams) (tgbotapi.Message, error) {
+func (message *Message) EditText(params MessageParams) (*Message, error) {
 	msg := tgbotapi.NewEditMessageText(message.ApiMessage.Chat.ID, message.ApiMessage.MessageID, params.Text)
 	msg.ReplyMarkup = params.InlineReplyMarkup
-	return message.bot.Send(msg)
+	return getMessage(msg, message.bot)
 }
 
-func (message *Message) Delete() (tgbotapi.Message, error) {
+func (message *Message) Delete() (*Message, error) {
 	msg := tgbotapi.NewDeleteMessage(message.ApiMessage.Chat.ID, message.ApiMessage.MessageID)
-	return message.bot.Send(msg)
+	return getMessage(msg, message.bot)
 }

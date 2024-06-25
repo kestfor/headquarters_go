@@ -3,7 +3,7 @@ package utils
 import "math/rand"
 
 func GetRandomChallengeEmoji() string {
-	emojis := []rune(`😐🤭🙄😅🥲😙🤨🤪🥸`)
+	emojis := []rune(`😐🤭🥸🤨🙄😙🤪🥲😅`)
 	maxN := len(emojis)
 	return string(emojis[rand.Intn(maxN)])
 }

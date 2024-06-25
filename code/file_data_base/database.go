@@ -6,6 +6,7 @@ import (
 	conf "headquarters/code/user_manager"
 	"io"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -19,11 +20,17 @@ type Record struct {
 	Attempts int       `json:"attempts"`
 }
 
+type User interface {
+	UserId() int64
+	UserName() string
+}
+
 type DataBaseInterface interface {
-	AddUser(user *conf.User) error
-	GetUser(userId int64) *conf.User
+	AddUser(user *User) error
+	GetUser(userId int64) *User
 	AddRecord(record *Record) error
 	AddPhrase(phrase string) error
+	Users() []User
 }
 
 type DataBase struct {
@@ -117,15 +124,15 @@ func (db *DataBase) AddRecord(record *Record) error {
 	return err
 }
 
-func (db *DataBase) GetUser(userId int64) *conf.User {
+func (db *DataBase) GetUser(userId int64) User {
 	return db.usersConfig.GetUser(userId)
 }
 
-func (db *DataBase) AddUser(user *conf.User) error {
+func (db *DataBase) AddUser(user User) error {
 	db.mutex.Lock()
 
-	if !db.usersConfig.InConfig(user.UserId) {
-		db.usersConfig.AddUser(*user)
+	if !db.usersConfig.InConfig(user.UserId()) {
+		db.usersConfig.AddUser(conf.TelegramUser{user.UserId(), user.UserName()})
 	}
 	err := db.usersConfig.WriteConfig()
 
@@ -145,7 +152,11 @@ func (db *DataBase) readPhrases() error {
 		if line == "" {
 			break
 		}
-		line = line[:len(line)-1]
+		endIndex := strings.Index(line, "\n")
+		if endIndex == -1 {
+			endIndex = len(line)
+		}
+		line = line[:endIndex]
 		db.Phrases = append(db.Phrases, line)
 	}
 	return file.Close()
@@ -179,4 +190,8 @@ func (db *DataBase) AddPhrase(phrase string) error {
 
 	db.mutex.Unlock()
 	return err
+}
+
+func (db *DataBase) Users() []conf.TelegramUser {
+	return db.usersConfig.Users()
 }

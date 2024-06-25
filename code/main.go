@@ -4,15 +4,19 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"headquarters/code/file_data_base"
 	"headquarters/code/geo"
+	"headquarters/code/notify_service"
 	"headquarters/code/update_handlers"
 	"headquarters/code/utils"
 	"log"
 	"os"
 )
 
+var TEST_TOKEN = "6696943443:AAEEidx578sqTT3tC0zGg3xppHPeBdVFTFY"
 var TOKEN = "6729922230:AAG1KZte-mstTL2tRD1uz3lezchKhJaJOTk"
 var DataBase *file_data_base.DataBase
 var MessageDeleter *Deleter
+
+var NotifyService *notify_service.NotifyService
 
 func main() {
 	var err error
@@ -26,6 +30,8 @@ func main() {
 	}
 
 	bot, err := tgbotapi.NewBotAPI(TOKEN)
+	NotifyService = notify_service.NewNotifyService(bot)
+
 	if err != nil {
 		log.Panic(err)
 		return

@@ -6,19 +6,37 @@ import (
 	"os"
 )
 
-type User struct {
-	UserId   int64  `json:"userId"`
-	UserName string `json:"userName"`
+type User interface {
+	UserId() int64
+	UserName() string
+}
+
+type TelegramUser struct {
+	Id   int64  `json:"userId"`
+	Name string `json:"userName"`
+}
+
+func (u *TelegramUser) UserId() int64 {
+	return u.Id
+}
+
+func (u *TelegramUser) UserName() string {
+	return u.Name
+}
+
+func NewTelegramUser(userId int64, userName string) *TelegramUser {
+	return &TelegramUser{userId, userName}
 }
 
 type Config struct {
-	Users []User `json:"users"`
+	Users []TelegramUser `json:"users"`
 }
 
 type configMap interface {
 	InConfig(userId string) bool
 	AddUser(user User)
 	GetUser(userId string) *User
+	Users() []TelegramUser
 }
 
 type ConfigInterface interface {
@@ -64,13 +82,13 @@ func (configManager *ConfigManager) WriteConfig() error {
 	return file.Close()
 }
 
-func (configManager *ConfigManager) AddUser(user User) {
+func (configManager *ConfigManager) AddUser(user TelegramUser) {
 	configManager.config.Users = append(configManager.config.Users, user)
 }
 
-func (configManager *ConfigManager) GetUser(userId int64) *User {
+func (configManager *ConfigManager) GetUser(userId int64) *TelegramUser {
 	for _, user := range configManager.config.Users {
-		if user.UserId == userId {
+		if user.UserId() == userId {
 			return &user
 		}
 	}
@@ -79,9 +97,15 @@ func (configManager *ConfigManager) GetUser(userId int64) *User {
 
 func (configManager *ConfigManager) InConfig(userId int64) bool {
 	for _, user := range configManager.config.Users {
-		if user.UserId == userId {
+		if user.UserId() == userId {
 			return true
 		}
 	}
 	return false
+}
+
+func (configManager *ConfigManager) Users() []TelegramUser {
+	res := make([]TelegramUser, len(configManager.config.Users), len(configManager.config.Users))
+	copy(res, configManager.config.Users)
+	return res
 }

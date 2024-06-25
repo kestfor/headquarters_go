@@ -1,10 +1,10 @@
 package main
 
 import (
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"headquarters/code/dice"
 	"headquarters/code/file_data_base"
 	geo2 "headquarters/code/geo"
+	"headquarters/code/notify_service"
 	"headquarters/code/update_handlers"
 	conf "headquarters/code/user_manager"
 	utils2 "headquarters/code/utils"
@@ -21,13 +21,13 @@ func StartCommand(params update_handlers.RedirectedParams) error {
 	MessageDeleter.DeleteMessages(message.ApiMessage.Chat.ID)
 	MessageDeleter.AddMessage(message)
 
-	err := DataBase.AddUser(&conf.User{UserId: message.ApiMessage.Chat.ID, UserName: message.ApiMessage.From.UserName})
+	err := DataBase.AddUser(conf.NewTelegramUser(message.ApiMessage.Chat.ID, message.ApiMessage.From.UserName))
 	if err != nil {
 		log.Println(err.Error())
 	}
 
 	msg, err := message.Answer(update_handlers.MessageParams{Text: "главное меню", ReplyMarkup: &utils2.MenuKeyboard})
-	MessageDeleter.AddMessage(update_handlers.NewMessage(&msg, params.Bot))
+	MessageDeleter.AddMessage(msg)
 	return err
 }
 
@@ -40,7 +40,7 @@ func StandardMessage(params update_handlers.RedirectedParams) error {
 	case "":
 		return nil
 	case "location":
-		return locationHandler(message, state, params.Bot)
+		return locationHandler(message, state)
 	case "challenge":
 		return challengeHandler(message, state)
 	case "phrase":
@@ -66,20 +66,33 @@ func challengeHandler(message *update_handlers.Message, state *update_handlers.S
 	if dice.Collection.Success(*message.ApiMessage.Dice) {
 
 		state.SetState("")
-		address := geo2.MainHome
-
-		err := DataBase.AddRecord(&file_data_base.Record{
+		address := geo2.MainHome.Address
+		loc, _ := time.LoadLocation("Asia/Krasnoyarsk")
+		record := file_data_base.Record{
 			UserId:   message.ApiMessage.Chat.ID,
-			Time:     time.Now(),
+			Time:     time.Now().In(loc),
 			Address:  address.ToString(),
-			Attempts: attempts})
+			Attempts: attempts}
+
+		err := DataBase.AddRecord(&record)
 
 		if err != nil {
 			log.Println(err.Error())
 		}
 
+		recordOwner := DataBase.GetUser(record.UserId)
+		allUsers := DataBase.Users()
+
+		var usersToNotify = make([]notify_service.User, 0, len(allUsers)-1)
+		for _, user := range allUsers {
+			if user.UserId() != recordOwner.UserId() {
+				usersToNotify = append(usersToNotify, &user)
+			}
+		}
+
 		MessageDeleter.DeleteMessages(message.ApiMessage.Chat.ID)
 		_, err = message.Answer(update_handlers.MessageParams{Text: "запись добавлена" + utils2.GetRandomHappyEmoji(), ReplyMarkup: &utils2.GoBackKeyboard})
+		go NotifyService.Notify("@"+recordOwner.UserName()+" зачекинился у @"+geo2.MainHome.Owner, usersToNotify)
 		return err
 
 	} else {
@@ -89,7 +102,7 @@ func challengeHandler(message *update_handlers.Message, state *update_handlers.S
 	}
 }
 
-func locationHandler(message *update_handlers.Message, state *update_handlers.State, bot *tgbotapi.BotAPI) error {
+func locationHandler(message *update_handlers.Message, state *update_handlers.State) error {
 	if message.ApiMessage.Location == nil {
 		return nil
 	}
@@ -99,19 +112,19 @@ func locationHandler(message *update_handlers.Message, state *update_handlers.St
 
 	MessageDeleter.AddMessage(message)
 
-	if geo2.MainHome.Equivalent(geo2.AddressFromLocation(latitude, longitude)) {
+	if geo2.MainHome.Address.Equivalent(geo2.AddressFromLocation(latitude, longitude)) {
 		state.SetState("challenge")
 
 		MessageDeleter.DeleteMessages(message.ApiMessage.Chat.ID)
 		msg, err := message.Answer(update_handlers.MessageParams{Text: utils2.ChallengeInscription, ReplyMarkup: &utils2.ChallengeReplyKeyboard, ParseMode: "HTML"})
-		MessageDeleter.AddMessage(update_handlers.NewMessage(&msg, bot))
+		MessageDeleter.AddMessage(msg)
 		return err
 	} else {
 		state.SetState("")
 
 		MessageDeleter.DeleteMessages(message.ApiMessage.Chat.ID)
 		msg, err := message.Answer(update_handlers.MessageParams{Text: "ты находишься не в том месте" + utils2.GetRandomChallengeEmoji(), ReplyMarkup: &utils2.GoBackKeyboard})
-		MessageDeleter.AddMessage(update_handlers.NewMessage(&msg, bot))
+		MessageDeleter.AddMessage(msg)
 		return err
 	}
 

@@ -14,7 +14,7 @@ func ChallengeCallback(params update_handlers2.RedirectedParams) error {
 	state.SetData(map[string]any{"attempts": 0})
 	_, _ = message.Delete()
 	msg, err := message.Answer(update_handlers2.MessageParams{Text: "отправить локацию", ReplyMarkup: &utils.GeolocationReplyKeyboard})
-	MessageDeleter.AddMessage(update_handlers2.NewMessage(&msg, params.Bot))
+	MessageDeleter.AddMessage(msg)
 	return err
 }
 
@@ -95,6 +95,6 @@ func AddPhraseCallback(params update_handlers2.RedirectedParams) error {
 
 	state.SetState("phrase")
 	msg, err := message.EditText(update_handlers2.MessageParams{Text: "отправь фразу", InlineReplyMarkup: &utils.GoBackKeyboard})
-	MessageDeleter.AddMessage(update_handlers2.NewMessage(&msg, params.Bot))
+	MessageDeleter.AddMessage(msg)
 	return err
 }
