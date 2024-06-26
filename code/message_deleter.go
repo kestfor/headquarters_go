@@ -5,24 +5,24 @@ import (
 )
 
 type DeleterInterface interface {
-	AddMessage(message *update_handlers.Message)
+	AddMessage(message update_handlers.Messenger)
 	DeleteMessages(userId int64)
 }
 
 type Deleter struct {
-	messages map[int64][]*update_handlers.Message
+	messages map[int64][]update_handlers.Messenger
 }
 
 func NewDeleter() *Deleter {
-	return &Deleter{messages: make(map[int64][]*update_handlers.Message)}
+	return &Deleter{messages: make(map[int64][]update_handlers.Messenger)}
 }
 
-func (d *Deleter) AddMessage(message *update_handlers.Message) {
-	userId := message.ApiMessage.Chat.ID
+func (d *Deleter) AddMessage(message update_handlers.Messenger) {
+	userId := message.GetMessage().Chat.ID
 	userMessages, isPresent := d.messages[userId]
 
 	if !isPresent {
-		userMessages = make([]*update_handlers.Message, 0)
+		userMessages = make([]update_handlers.Messenger, 0)
 	}
 
 	userMessages = append(userMessages, message)
@@ -33,5 +33,5 @@ func (d *Deleter) DeleteMessages(userId int64) {
 	for _, msg := range d.messages[userId] {
 		_, _ = msg.Delete()
 	}
-	d.messages[userId] = make([]*update_handlers.Message, 0)
+	d.messages[userId] = make([]update_handlers.Messenger, 0)
 }

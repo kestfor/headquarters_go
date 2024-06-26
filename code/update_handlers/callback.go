@@ -14,10 +14,6 @@ type CallbackFactory struct {
 	data   map[any]any
 }
 
-func NewCallbackFactory(prefix string) *CallbackFactory {
-	return &CallbackFactory{prefix: prefix, data: map[any]any{}}
-}
-
 type CallbackManager struct {
 	bot       *tgbotapi.BotAPI
 	callbacks map[string]func(params RedirectedParams) error

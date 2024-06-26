@@ -62,9 +62,9 @@ func DownloadFiles(params update_handlers2.RedirectedParams) error {
 	usersFile := tgbotapi.FilePath(DataBase.UserFileName)
 	phrasesFile := tgbotapi.FilePath(DataBase.PhrasesFileName)
 
-	phrases := tgbotapi.NewDocument(message.ApiMessage.Chat.ID, phrasesFile)
-	stats := tgbotapi.NewDocument(message.ApiMessage.Chat.ID, statsFile)
-	users := tgbotapi.NewDocument(message.ApiMessage.Chat.ID, usersFile)
+	phrases := tgbotapi.NewDocument(message.GetMessage().Chat.ID, phrasesFile)
+	stats := tgbotapi.NewDocument(message.GetMessage().Chat.ID, statsFile)
+	users := tgbotapi.NewDocument(message.GetMessage().Chat.ID, usersFile)
 
 	msg1, err1 := bot.Send(stats)
 	msg2, err2 := bot.Send(users)

@@ -18,10 +18,10 @@ func StartCommand(params update_handlers.RedirectedParams) error {
 	message := params.Message
 	params.State.Clear()
 
-	MessageDeleter.DeleteMessages(message.ApiMessage.Chat.ID)
+	MessageDeleter.DeleteMessages(message.GetMessage().Chat.ID)
 	MessageDeleter.AddMessage(message)
 
-	err := DataBase.AddUser(conf.NewTelegramUser(message.ApiMessage.Chat.ID, message.ApiMessage.From.UserName))
+	err := DataBase.AddUser(conf.NewTelegramUser(message.GetMessage().Chat.ID, message.GetMessage().From.UserName))
 	if err != nil {
 		log.Println(err.Error())
 	}
@@ -52,7 +52,7 @@ func StandardMessage(params update_handlers.RedirectedParams) error {
 
 func challengeHandler(message *update_handlers.Message, state *update_handlers.State) error {
 
-	if message.ApiMessage.Dice == nil {
+	if message.GetMessage().Dice == nil {
 		return nil
 	}
 
@@ -63,13 +63,13 @@ func challengeHandler(message *update_handlers.Message, state *update_handlers.S
 
 	time.Sleep(CHALLENGE_TRY_TIMEOUT)
 
-	if dice.Collection.Success(*message.ApiMessage.Dice) {
+	if dice.Collection.Success(*message.GetMessage().Dice) {
 
 		state.SetState("")
 		address := geo2.MainHome.Address
 		loc, _ := time.LoadLocation("Asia/Krasnoyarsk")
 		record := file_data_base.Record{
-			UserId:   message.ApiMessage.Chat.ID,
+			UserId:   message.GetMessage().Chat.ID,
 			Time:     time.Now().In(loc),
 			Address:  address.ToString(),
 			Attempts: attempts}
@@ -90,7 +90,7 @@ func challengeHandler(message *update_handlers.Message, state *update_handlers.S
 			}
 		}
 
-		MessageDeleter.DeleteMessages(message.ApiMessage.Chat.ID)
+		MessageDeleter.DeleteMessages(message.GetMessage().Chat.ID)
 		_, err = message.Answer(update_handlers.MessageParams{Text: "запись добавлена" + utils2.GetRandomHappyEmoji(), ReplyMarkup: &utils2.GoBackKeyboard})
 		go NotifyService.Notify("@"+recordOwner.UserName()+" зачекинился у @"+geo2.MainHome.Owner, usersToNotify)
 		return err
@@ -103,26 +103,26 @@ func challengeHandler(message *update_handlers.Message, state *update_handlers.S
 }
 
 func locationHandler(message *update_handlers.Message, state *update_handlers.State) error {
-	if message.ApiMessage.Location == nil {
+	if message.GetMessage().Location == nil {
 		return nil
 	}
 
-	latitude := message.ApiMessage.Location.Latitude
-	longitude := message.ApiMessage.Location.Longitude
+	latitude := message.GetMessage().Location.Latitude
+	longitude := message.GetMessage().Location.Longitude
 
 	MessageDeleter.AddMessage(message)
 
 	if geo2.MainHome.Address.Equivalent(geo2.AddressFromLocation(latitude, longitude)) {
 		state.SetState("challenge")
 
-		MessageDeleter.DeleteMessages(message.ApiMessage.Chat.ID)
+		MessageDeleter.DeleteMessages(message.GetMessage().Chat.ID)
 		msg, err := message.Answer(update_handlers.MessageParams{Text: utils2.ChallengeInscription, ReplyMarkup: &utils2.ChallengeReplyKeyboard, ParseMode: "HTML"})
 		MessageDeleter.AddMessage(msg)
 		return err
 	} else {
 		state.SetState("")
 
-		MessageDeleter.DeleteMessages(message.ApiMessage.Chat.ID)
+		MessageDeleter.DeleteMessages(message.GetMessage().Chat.ID)
 		msg, err := message.Answer(update_handlers.MessageParams{Text: "ты находишься не в том месте" + utils2.GetRandomChallengeEmoji(), ReplyMarkup: &utils2.GoBackKeyboard})
 		MessageDeleter.AddMessage(msg)
 		return err
@@ -131,12 +131,12 @@ func locationHandler(message *update_handlers.Message, state *update_handlers.St
 }
 
 func addPhraseHandler(message *update_handlers.Message, state *update_handlers.State) error {
-	if message.ApiMessage == nil {
+	if message.GetMessage() == nil {
 		return nil
 	}
 
 	MessageDeleter.AddMessage(message)
-	newPhrase := message.ApiMessage.Text
+	newPhrase := message.GetMessage().Text
 
 	if newPhrase == "" {
 		return nil
@@ -148,13 +148,13 @@ func addPhraseHandler(message *update_handlers.Message, state *update_handlers.S
 
 	if err != nil {
 
-		MessageDeleter.DeleteMessages(message.ApiMessage.Chat.ID)
+		MessageDeleter.DeleteMessages(message.GetMessage().Chat.ID)
 		_, err := message.Answer(update_handlers.MessageParams{Text: "что-то пошло не так", ReplyMarkup: &utils2.GoBackKeyboard})
 
 		return err
 	} else {
 
-		MessageDeleter.DeleteMessages(message.ApiMessage.Chat.ID)
+		MessageDeleter.DeleteMessages(message.GetMessage().Chat.ID)
 		_, err := message.Answer(update_handlers.MessageParams{Text: "фраза добавлена" + utils2.GetRandomHappyEmoji(), ReplyMarkup: &utils2.GoBackKeyboard})
 		return err
 	}

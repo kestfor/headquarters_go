@@ -5,7 +5,7 @@ import (
 )
 
 type Message struct {
-	ApiMessage *tgbotapi.Message
+	apiMessage *tgbotapi.Message
 	bot        *tgbotapi.BotAPI
 }
 
@@ -20,13 +20,18 @@ func NewMessage(msg *tgbotapi.Message, bot *tgbotapi.BotAPI) *Message {
 	return &Message{msg, bot}
 }
 
-type MessageInterface interface {
-	Delete() (*Message, error)
-	Answer(params MessageParams) (*Message, error)
-	EditText(params MessageParams) (*Message, error)
+type Messenger interface {
+	GetMessage() *tgbotapi.Message
+	Delete() (Messenger, error)
+	Answer(params MessageParams) (Messenger, error)
+	EditText(params MessageParams) (Messenger, error)
 }
 
-func getMessage(message tgbotapi.Chattable, bot *tgbotapi.BotAPI) (*Message, error) {
+func (m *Message) GetMessage() *tgbotapi.Message {
+	return m.apiMessage
+}
+
+func getMessage(message tgbotapi.Chattable, bot *tgbotapi.BotAPI) (Messenger, error) {
 	res, err := bot.Send(message)
 	if err != nil {
 		return nil, err
@@ -35,22 +40,22 @@ func getMessage(message tgbotapi.Chattable, bot *tgbotapi.BotAPI) (*Message, err
 	}
 }
 
-func (message *Message) Answer(params MessageParams) (*Message, error) {
-	msg := tgbotapi.NewMessage(message.ApiMessage.Chat.ID, params.Text)
+func (m *Message) Answer(params MessageParams) (Messenger, error) {
+	msg := tgbotapi.NewMessage(m.apiMessage.Chat.ID, params.Text)
 	msg.ReplyMarkup = params.ReplyMarkup
 	if params.ParseMode != "" {
 		msg.ParseMode = params.ParseMode
 	}
-	return getMessage(msg, message.bot)
+	return getMessage(msg, m.bot)
 }
 
-func (message *Message) EditText(params MessageParams) (*Message, error) {
-	msg := tgbotapi.NewEditMessageText(message.ApiMessage.Chat.ID, message.ApiMessage.MessageID, params.Text)
+func (m *Message) EditText(params MessageParams) (Messenger, error) {
+	msg := tgbotapi.NewEditMessageText(m.apiMessage.Chat.ID, m.apiMessage.MessageID, params.Text)
 	msg.ReplyMarkup = params.InlineReplyMarkup
-	return getMessage(msg, message.bot)
+	return getMessage(msg, m.bot)
 }
 
-func (message *Message) Delete() (*Message, error) {
-	msg := tgbotapi.NewDeleteMessage(message.ApiMessage.Chat.ID, message.ApiMessage.MessageID)
-	return getMessage(msg, message.bot)
+func (m *Message) Delete() (Messenger, error) {
+	msg := tgbotapi.NewDeleteMessage(m.apiMessage.Chat.ID, m.apiMessage.MessageID)
+	return getMessage(msg, m.bot)
 }
