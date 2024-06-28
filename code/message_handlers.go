@@ -86,7 +86,7 @@ func challengeHandler(message *update_handlers.Message, state *update_handlers.S
 		var usersToNotify = make([]notify_service.User, 0, len(allUsers)-1)
 		for _, user := range allUsers {
 			if user.UserId() != recordOwner.UserId() {
-				usersToNotify = append(usersToNotify, &user)
+				usersToNotify = append(usersToNotify, &conf.TelegramUser{Id: user.UserId(), Name: user.UserName()})
 			}
 		}
 
