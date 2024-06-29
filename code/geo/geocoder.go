@@ -50,7 +50,7 @@ func (addr *Address) Equivalent(address *Address) bool {
 	if address == nil {
 		return false
 	}
-	return addr.HouseNumber == address.HouseNumber && addr.Road == address.Road && addr.City == address.City
+	return addr.HouseNumber == address.HouseNumber && addr.Road == address.Road
 }
 
 func (addr *Address) ToString() string {

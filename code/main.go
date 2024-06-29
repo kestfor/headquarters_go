@@ -42,6 +42,7 @@ func main() {
 	handler.CallbackManager.RegisterCallback(HousesCallback, geo.HomeOfDima)
 	handler.CallbackManager.RegisterCallback(HousesCallback, geo.HomeOfIlya)
 	handler.CallbackManager.RegisterCallback(HousesCallback, geo.HomeOfAlena)
+	handler.CallbackManager.RegisterCallback(HousesCallback, geo.HomeOfAnton)
 
 	handler.CallbackManager.RegisterCallback(AddPhraseCallback, utils.ADD_PHRASE_INIT)
 	handler.CallbackManager.RegisterCallback(DownloadFiles, utils.DOWNLOAD_STAT)

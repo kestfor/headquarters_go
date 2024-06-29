@@ -49,7 +49,9 @@ func HousesCallback(params update_handlers2.RedirectedParams) error {
 		break
 	case geo.HomeOfAnton:
 		geo.MainHome = geo.Houses[geo.HomeOfAnton]
+		break
 	default:
+		break
 	}
 
 	_, err := params.Message.EditText(update_handlers2.MessageParams{Text: "штаб изменен", InlineReplyMarkup: &utils.GoBackKeyboard})
