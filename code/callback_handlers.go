@@ -47,6 +47,8 @@ func HousesCallback(params update_handlers2.RedirectedParams) error {
 	case geo.HomeOfDima:
 		geo.MainHome = geo.Houses[geo.HomeOfDima]
 		break
+	case geo.HomeOfAnton:
+		geo.MainHome = geo.Houses[geo.HomeOfAnton]
 	default:
 	}
 

@@ -43,5 +43,6 @@ var HousesKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 	tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData(geo.HomeOfAlena, geo.HomeOfAlena)),
 	tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData(geo.HomeOfIlya, geo.HomeOfIlya)),
 	tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData(geo.HomeOfDima, geo.HomeOfDima)),
+	tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData(geo.HomeOfAnton, geo.HomeOfAnton)),
 	tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("назад", MENU)),
 )
