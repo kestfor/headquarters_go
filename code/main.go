@@ -12,7 +12,7 @@ import (
 )
 
 var TEST_TOKEN = "6696943443:AAEEidx578sqTT3tC0zGg3xppHPeBdVFTFY"
-var TOKEN = "6729922230:AAG1KZte-mstTL2tRD1uz3lezchKhJaJOTk"
+var TOKEN = "6729922230:AAGeyBOYUVERijSeabmwjs352XMNJWtICQ8"
 var DataBase *file_data_base.DataBase
 var MessageDeleter *Deleter
 
