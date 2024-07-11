@@ -29,7 +29,7 @@ func main() {
 		return
 	}
 
-	bot, err := tgbotapi.NewBotAPI(TEST_TOKEN)
+	bot, err := tgbotapi.NewBotAPI(TOKEN)
 	NotifyService = notify_service.NewNotifyService(bot)
 
 	if err != nil {
