@@ -110,9 +110,12 @@ func locationHandler(message *update_handlers.Message, state *update_handlers.St
 	latitude := message.GetMessage().Location.Latitude
 	longitude := message.GetMessage().Location.Longitude
 
+	point := geo2.NewTelegramMapPoint(longitude, latitude)
+	distance := geo2.Distance(point, geo2.MainHome.Address)
+
 	MessageDeleter.AddMessage(message)
 
-	if geo2.MainHome.Address.Equivalent(geo2.AddressFromLocation(latitude, longitude)) {
+	if distance < geo2.MAX_ERROR {
 		state.SetState("challenge")
 
 		MessageDeleter.DeleteMessages(message.GetMessage().Chat.ID)

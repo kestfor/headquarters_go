@@ -2,13 +2,46 @@ package geo
 
 import (
 	nominatim "github.com/doppiogancio/go-nominatim"
+	"math"
 	"strings"
 )
+
+type MapPoint interface {
+	GetLatitude() float64
+	GetLongitude() float64
+}
+
+type TelegramMapPoint struct {
+	Longitude float64
+	Latitude  float64
+}
+
+func (t *TelegramMapPoint) GetLatitude() float64 {
+	return t.Latitude
+}
+
+func (t *TelegramMapPoint) GetLongitude() float64 {
+	return t.Longitude
+}
+
+func NewTelegramMapPoint(longitude, latitude float64) *TelegramMapPoint {
+	return &TelegramMapPoint{longitude, latitude}
+}
 
 type Address struct {
 	HouseNumber string
 	Road        string
 	City        string
+	Latitude    float64
+	Longitude   float64
+}
+
+func (a *Address) GetLatitude() float64 {
+	return a.Latitude
+}
+
+func (a *Address) GetLongitude() float64 {
+	return a.Longitude
 }
 
 type AddressInterface interface {
@@ -26,7 +59,7 @@ func addressFromStringArray(arr []string) *Address {
 	}
 }
 
-func AddressFromString(s string) *Address {
+func addressFromString(s string) *Address {
 	if len(s) == 0 {
 		return &Address{}
 	}
@@ -34,8 +67,8 @@ func AddressFromString(s string) *Address {
 	return addressFromStringArray(split)
 }
 
-func NewAddress(houseNumber string, road string, city string) *Address {
-	return &Address{HouseNumber: houseNumber, Road: road, City: city}
+func NewAddress(houseNumber string, road string, city string, latitude float64, longitude float64) *Address {
+	return &Address{HouseNumber: houseNumber, Road: road, City: city, Latitude: latitude, Longitude: longitude}
 }
 
 func AddressFromLocation(latitude float64, longitude float64) *Address {
@@ -43,7 +76,10 @@ func AddressFromLocation(latitude float64, longitude float64) *Address {
 	if err != nil {
 		return nil
 	}
-	return AddressFromString(addr.DisplayName)
+	res := addressFromString(addr.DisplayName)
+	res.Latitude = latitude
+	res.Longitude = longitude
+	return res
 }
 
 func (addr *Address) Equivalent(address *Address) bool {
@@ -58,4 +94,15 @@ func (addr *Address) ToString() string {
 		return ""
 	}
 	return addr.HouseNumber + ", " + addr.Road + ", " + addr.City
+}
+
+// Distance func returns distance between two points in meters
+func Distance(first, second MapPoint) float64 {
+	deltaFirst := degreesToRadians(first.GetLatitude()-second.GetLatitude()) / 2
+	deltaSecond := degreesToRadians(first.GetLongitude()-second.GetLongitude()) / 2
+	sinFirstDelta := math.Sin(deltaFirst)
+	sinSecondDelta := math.Sin(deltaSecond)
+	a := sinFirstDelta*sinFirstDelta + math.Cos(degreesToRadians(first.GetLatitude()))*math.Cos(degreesToRadians(second.GetLatitude()))*sinSecondDelta*sinSecondDelta
+	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+	return R * c
 }
