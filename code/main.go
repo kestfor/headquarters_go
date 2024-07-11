@@ -29,7 +29,7 @@ func main() {
 		return
 	}
 
-	bot, err := tgbotapi.NewBotAPI(TEST_TOKEN)
+	bot, err := tgbotapi.NewBotAPI(TOKEN)
 	NotifyService = notify_service.NewNotifyService(bot)
 
 	if err != nil {
@@ -58,6 +58,12 @@ func main() {
 	updates := bot.GetUpdatesChan(u)
 
 	for update := range updates {
+
+		chatId := update.FromChat().ID
+		if !DataBase.Contains(chatId) {
+			continue
+		}
+
 		go func() {
 			err := handler.HandleUpdate(update)
 			if err != nil {

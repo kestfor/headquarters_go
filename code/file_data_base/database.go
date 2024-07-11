@@ -31,6 +31,7 @@ type DataBaseInterface interface {
 	AddRecord(record *Record) error
 	AddPhrase(phrase string) error
 	Users() []User
+	Contains(userId int64) bool
 }
 
 type DataBase struct {
@@ -69,6 +70,12 @@ func NewDataBase(userFileName string, statsFileName string, phrasesFileName stri
 	}
 
 	return db, nil
+}
+
+func (db *DataBase) Contains(userId int64) bool {
+	db.mutex.RLock()
+	defer db.mutex.RUnlock()
+	return db.usersConfig.InConfig(userId)
 }
 
 func (db *DataBase) readStats() error {
