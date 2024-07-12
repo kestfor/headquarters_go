@@ -58,6 +58,12 @@ func main() {
 	updates := bot.GetUpdatesChan(u)
 
 	for update := range updates {
+
+		chatId := update.FromChat().ID
+		if !DataBase.Contains(chatId) {
+			continue
+		}
+
 		go func() {
 			err := handler.HandleUpdate(update)
 			if err != nil {
