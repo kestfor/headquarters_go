@@ -11,8 +11,8 @@ import (
 	"os"
 )
 
-var TEST_TOKEN = "6696943443:AAEEidx578sqTT3tC0zGg3xppHPeBdVFTFY"
-var TOKEN = "6729922230:AAGeyBOYUVERijSeabmwjs352XMNJWtICQ8"
+var TEST_TOKEN = ""
+var TOKEN = ""
 var DataBase *file_data_base.DataBase
 var MessageDeleter *Deleter
 
